@@ -1,0 +1,7 @@
+{
+  "_comment": "deploy_v8 项目标定文件。UI 的「自动识别」按钮读取本文件，把相对路径解析到绝对路径后自动填入 项目目录/模型目录/上传目录/数据目录。各路径均相对于本文件所在目录。",
+  "project_dir": ".",
+  "model_dir": "models",
+  "upload_dir": "upload",
+  "data_dir": "../data"
+}

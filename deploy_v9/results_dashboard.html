@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>电力现货价差预测 · 结果仪表盘</title>
+<style>
+  :root {
+    --bg: #f4f6fa;
+    --panel: #ffffff;
+    --panel-2: #eef2f7;
+    --border: #d8e0ea;
+    --text: #1f2a37;
+    --muted: #6b7a90;
+    --accent: #2f6fed;
+    --green: #16a34a;
+    --red: #dc2626;
+    --yellow: #d97706;
+    --purple: #7c3aed;
+    --orange: #ea580c;
+    --gray: #94a3b8;
+    --shadow: 0 1px 3px rgba(15,23,42,0.08), 0 1px 2px rgba(15,23,42,0.05);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "PingFang SC", "Helvetica Neue", "Microsoft YaHei", sans-serif;
+    padding: 20px 24px 40px;
+  }
+  .header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin-bottom: 16px; }
+  .header h1 { font-size: 20px; font-weight: 700; letter-spacing: 0.2px; }
+  .header .sub { color: var(--muted); font-size: 13px; }
+  .spacer { flex: 1; }
+  select, button {
+    background: #fff; color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px;
+    padding: 8px 14px; font-size: 13px; cursor: pointer;
+    box-shadow: var(--shadow);
+  }
+  select:focus, button:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button:hover { background: var(--panel-2); }
+  .file-wrap { display: flex; align-items: center; gap: 8px; }
+  .file-wrap label { color: var(--muted); font-size: 13px; }
+
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 13px 16px; box-shadow: var(--shadow);
+  }
+  .kpi .label { color: var(--muted); font-size: 12px; margin-bottom: 5px; }
+  .kpi .value { font-size: 24px; font-weight: 700; }
+  .kpi .value small { font-size: 13px; color: var(--muted); font-weight: 400; }
+  .kpi .value.green { color: var(--green); }
+  .kpi .value.red { color: var(--red); }
+  .kpi .value.yellow { color: var(--yellow); }
+  .kpi .value.blue { color: var(--accent); }
+  .kpi .value.muted { color: var(--muted); }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+  .grid.full { grid-template-columns: 1fr; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
+    padding: 13px 15px; box-shadow: var(--shadow); position: relative;
+  }
+  .panel h3 { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+  .panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+  .panel canvas { width: 100%; display: block; cursor: crosshair; }
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--muted); margin-top: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  .table-wrap { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); }
+  .table-wrap h3 { padding: 14px 16px 8px; font-size: 14px; }
+  .table-scroll { overflow-x: auto; max-height: 340px; overflow-y: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; white-space: nowrap; }
+  thead th {
+    position: sticky; top: 0; background: var(--panel-2); color: var(--muted);
+    font-weight: 600; text-align: center; padding: 9px 12px;
+    border-bottom: 1px solid var(--border); z-index: 1;
+  }
+  tbody td { padding: 7px 12px; text-align: center; border-bottom: 1px solid #edf1f7; color: var(--text); }
+  tbody tr:hover { background: #f0f6ff; }
+  tr.row-green td { background: rgba(22,163,74,0.07); }
+  tr.row-green td:first-child { border-left: 3px solid var(--green); }
+  tr.row-red td { background: rgba(220,38,38,0.07); }
+  tr.row-red td:first-child { border-left: 3px solid var(--red); }
+  tr.row-yellow td:first-child { border-left: 3px solid var(--yellow); }
+  /* 套利时机分色：日前买=红（押负偏差，DA<RT），日前卖=绿（押正偏差） */
+  tr.row-buy td:first-child { border-left: 3px solid var(--red); }
+  tr.row-sell td:first-child { border-left: 3px solid var(--green); }
+  .ck-tag { display: inline-block; padding: 1px 7px; border-radius: 8px; font-size: 11px; font-weight: 600; }
+  .ck-a { background: #eef2f7; color: #6b7a90; }
+  .ck-b { background: #fef3c7; color: #b45309; }
+  .ck-c { background: #dcfce7; color: #15803d; }
+  .arb-buy { color: var(--red); font-weight: 700; }
+  .arb-sell { color: var(--green); font-weight: 700; }
+  .arb-pro { color: var(--green); font-weight: 700; }
+  .arb-loss { color: var(--red); font-weight: 700; }
+  .arb-miss { color: var(--yellow); font-weight: 600; }
+
+  /* 金融式悬停信息卡（跟随十字线） */
+  .tooltip {
+    position: fixed; pointer-events: none; z-index: 100;
+    background: #fff; border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 14px; font-size: 12px; line-height: 1.6;
+    display: none; min-width: 210px; box-shadow: 0 8px 30px rgba(15,23,42,0.18);
+  }
+  .tooltip .tt-title { color: var(--accent); font-weight: 700; font-size: 12.5px; margin-bottom: 4px; border-bottom: 1px solid #eef2f7; padding-bottom: 4px; }
+  .tooltip .tt-row { display: flex; justify-content: space-between; gap: 18px; }
+  .tooltip .tt-row .k { color: var(--muted); }
+  .tooltip .tt-row .v { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .tooltip .tt-row .v.pos { color: var(--red); }
+  .tooltip .tt-row .v.neg { color: var(--green); }
+  .tooltip .tt-row .v.strong { color: var(--accent); font-size: 14px; }
+
+  .status-bar { margin-top: 16px; font-size: 12px; color: var(--muted); display: flex; gap: 20px; flex-wrap: wrap; }
+  .loading { color: var(--muted); font-size: 13px; padding: 30px; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>电力现货价差预测 · 结果仪表盘</h1>
+  <span class="sub" id="subtitle"></span>
+  <div class="spacer"></div>
+  <div class="file-wrap">
+    <label>预测文件:</label>
+    <select id="fileSel"></select>
+    <button id="refreshBtn">⟳ 刷新</button>
+  </div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid" id="chartGrid">
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--accent)"></span>量级 / 价差走势</h3>
+    <canvas id="chartMain"></canvas>
+    <div class="legend" id="legendMain"></div>
+  </div>
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--green)"></span>方向 vs 小时先验</h3>
+    <canvas id="chartDir"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--red)"></i>方向头</span>
+      <span><i style="background:var(--green)"></i>小时先验</span>
+    </div>
+  </div>
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--purple)"></span>置信度</h3>
+    <canvas id="chartConf"></canvas>
+  </div>
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--orange)"></span>实际价差核对</h3>
+    <canvas id="chartAct"></canvas>
+    <div class="legend">
+      <span><i style="background:var(--green)"></i>对</span>
+      <span><i style="background:var(--red)"></i>错</span>
+      <span><i style="background:var(--gray)"></i>中性</span>
+      <span><i style="background:var(--yellow)"></i>错过</span>
+      <span><i style="background:#e5e7eb"></i>待实际</span>
+    </div>
+  </div>
+</div>
+
+<div class="grid full">
+  <div class="panel">
+    <h3><span class="dot" style="background:var(--yellow)"></span>量级热力图（日期 × 小时）</h3>
+    <canvas id="chartHeat" style="height:200px"></canvas>
+  </div>
+</div>
+
+<div class="table-wrap">
+  <h3>明细数据</h3>
+  <div class="table-scroll" id="tableScroll"></div>
+</div>
+
+<div class="status-bar" id="statusBar"></div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// 状态
+// ════════════════════════════════════════════════════════════
+let allResults = [], current = null, modelInfo = null;
+const TT = document.getElementById('tooltip');
+const hoverState = { idx: -1, mx: 0, my: 0 };   // 当前悬停点
+
+const $ = id => document.getElementById(id);
+function esc(s) { return String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+// 信息卡：展示十字线命中的一行全部字段
+function showInfo(cv, e, lines) {
+  // 固定到鼠标右侧，防出屏
+  const r = TT.getBoundingClientRect();
+  let px = e.clientX + 16, py = e.clientY + 8;
+  if (px + r.width > window.innerWidth) px = e.clientX - r.width - 14;
+  if (py + r.height > window.innerHeight) py = e.clientY - r.height - 10;
+  TT.innerHTML = lines;
+  TT.style.display = 'block';
+  TT.style.left = px + 'px'; TT.style.top = py + 'px';
+}
+function hideInfo() { TT.style.display = 'none'; hoverState.idx = -1; }
+
+// ════════════════════════════════════════════════════════════
+// Canvas 高分屏适配
+// ════════════════════════════════════════════════════════════
+function setupCanvas(cv) {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = cv.getBoundingClientRect();
+  const w = Math.max(rect.width, 50), h = Math.max(rect.height, 40);
+  const bw = Math.round(w * dpr), bh = Math.round(h * dpr);
+  if (cv.width !== bw || cv.height !== bh) { cv.width = bw; cv.height = bh; }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  return { ctx, w, h };
+}
+
+// ════════════════════════════════════════════════════════════
+// 日期分段 x 轴：日期主刻度 + 每 6h 小时子刻度（解决 144 点重叠）
+// ════════════════════════════════════════════════════════════
+function dayAxis(rows) {
+  const boundaries = [], labels = [];
+  rows.forEach((r, i) => {
+    const d = r['日期'];
+    if (i === 0 || d !== rows[i - 1]['日期']) { boundaries.push(i); labels.push(d.slice(5)); }
+  });
+  boundaries.push(rows.length);
+  return { boundaries, labels };
+}
+
+function drawXAxis(ctx, X, pad, h, rows) {
+  const da = dayAxis(rows);
+  ctx.strokeStyle = '#dfe5ee';
+  ctx.fillStyle = '#6b7a90';
+  ctx.font = '10px sans-serif';
+  // 日期分隔线（主网格）
+  da.boundaries.forEach((b, i) => {
+    if (i === 0) return;   // 最左边界不用画
+    const x = X(b);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, pad.t + pad.h); ctx.stroke();
+  });
+  // 日期标签（居中放在每天底部）
+  ctx.textAlign = 'center';
+  da.boundaries.forEach((b, i) => {
+    const next = da.boundaries[i + 1];
+    const x0 = X(b), x1 = X(next);
+    ctx.fillText(da.labels[i], (x0 + x1) / 2, h - 8);
+  });
+  // 每 6h 小时子刻度（0/6/12/18）
+  ctx.fillStyle = '#8fa0b5';
+  da.boundaries.forEach((b, i) => {
+    const next = da.boundaries[i + 1];
+    for (let t = 0; t < 24; t += 6) {
+      const idx = b + t;
+      if (idx >= next) continue;
+      const x = X(idx);
+      ctx.beginPath(); ctx.moveTo(x, pad.t + pad.h); ctx.lineTo(x, pad.t + pad.h + 4); ctx.stroke();
+      ctx.fillText(String(t), x, h - 2);
+    }
+  });
+}
+
+// ════════════════════════════════════════════════════════════
+// 折线图（支持十字线 + 金融式信息卡）
+// opts: { xs, labels, series:[{data,color,width}], thresholds, ymin,ymax, ylab, rows }
+// 返回 draw(cv, hoverIdx, e) 重绘函数
+// ════════════════════════════════════════════════════════════
+function makeLineChart(cv, opts) {
+  const rows = opts.rows;
+  const xs = opts.xs || rows.map((_, i) => i);
+  const pad = { l: 46, r: 16, t: 14, b: 34 };
+  function compute() {
+    const { ctx, w, h } = setupCanvas(cv);
+    const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+    const X = i => pad.l + (i / Math.max(xs.length - 1, 1)) * iw;
+    const Y = v => pad.t + ih - ((v - (opts.ymin ?? 0)) / ((opts.ymax ?? 100) - (opts.ymin ?? 0))) * ih;
+    return { ctx, w, h, iw, ih, X, Y };
+  }
+
+  function drawBase() {
+    const { ctx, w, h, iw, ih, X, Y } = compute();
+    const ymin = opts.ymin ?? 0, ymax = opts.ymax ?? 100;
+    ctx.clearRect(0, 0, w, h);
+    // 网格 + y 刻度
+    ctx.strokeStyle = '#e8edf4';
+    ctx.fillStyle = '#6b7a90'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    const ny = 5;
+    for (let i = 0; i <= ny; i++) {
+      const v = ymin + (ymax - ymin) * i / ny;
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke();
+      ctx.fillText(formatNum(v), pad.l - 6, Y(v) + 3);
+    }
+    drawXAxis(ctx, X, { t: pad.t, h: ih }, h, rows);
+    // 阈值线
+    for (const t of opts.thresholds || []) {
+      ctx.strokeStyle = t.color; ctx.lineWidth = 1; ctx.setLineDash(t.dash || [4, 4]);
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(t.v)); ctx.lineTo(w - pad.r, Y(t.v)); ctx.stroke();
+      ctx.setLineDash([]);
+      // 阈值标签
+      ctx.fillStyle = t.color; ctx.fillText(t.label ?? formatNum(t.v), w - pad.r - 2, Y(t.v) - 3);
+    }
+    // 折线
+    for (const s of opts.series) {
+      ctx.strokeStyle = s.color; ctx.lineWidth = s.width || 2;
+      ctx.beginPath();
+      let started = false;
+      s.data.forEach((v, i) => {
+        if (v == null || isNaN(v)) { started = false; return; }
+        const x = X(i), y = Y(v);
+        if (!started) { ctx.moveTo(x, y); started = true; } else ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+    }
+    // 标记（套利时机等）：在折线上叠加三角形/圆点
+    for (const m of opts.markers || []) {
+      ctx.fillStyle = m.color;
+      for (const i of m.indices) {
+        const v = (opts.series[0]?.data || [])[i];
+        if (v == null || isNaN(v)) continue;
+        const x = X(i), y = Y(v);
+        ctx.beginPath();
+        if (m.shape === 'tri') {
+          // 倒三角，尖端在数据点上方
+          ctx.moveTo(x, y - 9); ctx.lineTo(x - 4.5, y - 2); ctx.lineTo(x + 4.5, y - 2);
+        } else {
+          ctx.arc(x, y, m.r || 4.5, 0, Math.PI * 2);
+        }
+        ctx.closePath();
+        ctx.globalAlpha = 0.95;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
+    }
+    // y 轴标题
+    if (opts.ylab) {
+      ctx.save(); ctx.fillStyle = '#8fa0b5'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.translate(13, pad.t + ih / 2); ctx.rotate(-Math.PI / 2); ctx.fillText(opts.ylab, 0, 0); ctx.restore();
+    }
+    return { ctx, w, h, X, Y };
+  }
+
+  function drawOverlay(state) {
+    const { ctx, w, h, X, Y } = compute();
+    if (!state || state.idx < 0) return;
+    const i = state.idx, x = X(i);
+    const yVal = hoverValue(opts.series, i);
+    // 十字线
+    ctx.strokeStyle = 'rgba(47,111,237,0.55)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+    if (yVal != null && !isNaN(yVal)) {
+      const y = Y(yVal);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      // 当前点圆点
+      ctx.setLineDash([]);
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2f6fed'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+  }
+
+  return function redraw(state, e) {
+    const base = drawBase();
+    drawOverlay(state);
+    return base;   // 返回坐标映射供 hover 用
+  };
+}
+function hoverValue(series, i) {
+  for (const s of series) {
+    const v = s.data[i];
+    if (v != null && !isNaN(v)) return v;
+  }
+  return NaN;
+}
+
+function formatNum(v) {
+  if (v == null || isNaN(v)) return '—';
+  return Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1);
+}
+
+// ════════════════════════════════════════════════════════════
+// 绑定十字线 hover（折线图通用）
+// ════════════════════════════════════════════════════════════
+function bindCrosshair(cv, redraw, getInfo, rows) {
+  const pad = { l: 46, r: 16, t: 14, b: 34 };
+  cv.addEventListener('mousemove', e => {
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const w = rect.width;
+    if (mx < pad.l || mx > w - pad.r || my < pad.t) { hideInfo(); redraw({ idx: -1 }); return; }
+    // 最近点
+    const n = rows.length;
+    const idx = Math.max(0, Math.min(n - 1, Math.round((mx - pad.l) / (Math.max(w - pad.l - pad.r, 1) / Math.max(n - 1, 1)))));
+    hoverState.idx = idx;
+    const lines = getInfo(idx);
+    if (lines) showInfo(cv, e, lines);
+    redraw(hoverState);
+  });
+  cv.addEventListener('mouseleave', () => { hideInfo(); redraw({ idx: -1 }); });
+}
+
+// ════════════════════════════════════════════════════════════
+// 散点图（实际核对用，带十字线）
+// ════════════════════════════════════════════════════════════
+function makeScatterChart(cv, opts) {
+  const { ctx, w, h } = setupCanvas(cv);
+  const pad = { l: 46, r: 16, t: 14, b: 34 };
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const vals = opts.data.filter(v => !isNaN(v));
+  const ymax = Math.max(opts.t1 * 1.2, ...vals.map(v => Math.abs(v))) * 1.15 || 60;
+  const ymin = -ymax;
+  const X = i => pad.l + (i / Math.max(opts.xs.length - 1, 1)) * iw;
+  const Y = v => pad.t + ih - ((v - ymin) / (ymax - ymin)) * ih;
+
+  function drawBase() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = '#e8edf4'; ctx.fillStyle = '#6b7a90'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+    for (let i = 0; i <= 5; i++) {
+      const v = ymin + (ymax - ymin) * i / 5;
+      ctx.beginPath(); ctx.moveTo(pad.l, Y(v)); ctx.lineTo(w - pad.r, Y(v)); ctx.stroke();
+      ctx.fillText(v.toFixed(0), pad.l - 6, Y(v) + 3);
+    }
+    drawXAxis(ctx, X, { t: pad.t, h: ih }, h, opts.rows);
+    // 参考线
+    ctx.strokeStyle = '#f0b429'; ctx.setLineDash([4, 4]);
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(opts.t1)); ctx.lineTo(w - pad.r, Y(opts.t1)); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(-opts.t1)); ctx.lineTo(w - pad.r, Y(-opts.t1)); ctx.stroke();
+    ctx.strokeStyle = '#94a3b8'; ctx.setLineDash([]);
+    ctx.beginPath(); ctx.moveTo(pad.l, Y(0)); ctx.lineTo(w - pad.r, Y(0)); ctx.stroke();
+    // 散点
+    opts.data.forEach((v, i) => {
+      if (isNaN(v)) return;
+      ctx.fillStyle = opts.colors[i];
+      ctx.globalAlpha = opts.colors[i] === '#e5e7eb' ? 0.5 : 0.9;
+      ctx.beginPath(); ctx.arc(X(i), Y(v), 4, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+  }
+
+  function drawOverlay(state) {
+    if (!state || state.idx < 0) return;
+    const i = state.idx, x = X(i);
+    ctx.strokeStyle = 'rgba(47,111,237,0.55)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, h - pad.b); ctx.stroke();
+    ctx.setLineDash([]);
+    const v = opts.data[i];
+    if (!isNaN(v)) {
+      const y = Y(v);
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(w - pad.r, y); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.strokeStyle = '#2f6fed'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    }
+  }
+
+  return function redraw(state) { drawBase(); drawOverlay(state); };
+}
+
+// ════════════════════════════════════════════════════════════
+// 热力图（带 hover 显示格子值）
+// ════════════════════════════════════════════════════════════
+function renderHeatmap(res) {
+  const cv = $('chartHeat');
+  const { ctx, w, h } = setupCanvas(cv);
+  const rows = res.rows;
+  const dates = [...new Set(rows.map(r => r['日期']))];
+  const hours = [...new Set(rows.map(r => String(r['小时']).slice(0, 2)))].sort();
+  const pad = { l: 64, r: 10, t: 12, b: 24 };
+  const iw = w - pad.l - pad.r, ih = h - pad.t - pad.b;
+  const cellW = iw / hours.length, cellH = ih / dates.length;
+  const key = res.is_v9 ? '量级(元/MWh)' : '预测价差(元/MWh)';
+  const maxV = Math.max(1, ...rows.map(r => Math.abs(toNum(r[key]) || 0)));
+  const t1 = modelInfo?.threshold ?? 50;
+
+  function colorFor(v) {
+    if (v == null || isNaN(v)) return '#eef2f7';
+    const t = Math.min(1, Math.abs(v) / maxV);
+    const r = Math.round(245 - t * 155);
+    const g = Math.round(245 - t * 120);
+    const b = Math.round(250 - t * 100);
+    return `rgb(${r},${g},${b})`;   // 白 → 蓝紫 → 深红
+  }
+  const cellVals = {};   // 'di-hi' -> value
+  rows.forEach(r => {
+    const di = dates.indexOf(r['日期']), hi = hours.indexOf(String(r['小时']).slice(0, 2));
+    if (di < 0 || hi < 0) return;
+    const v = toNum(r[key]);
+    cellVals[di + '-' + hi] = v;
+    ctx.fillStyle = colorFor(v);
+    ctx.fillRect(pad.l + hi * cellW + 0.5, pad.t + di * cellH + 0.5, cellW - 1, cellH - 1);
+  });
+  // 轴标签
+  ctx.fillStyle = '#6b7a90'; ctx.font = '10px sans-serif'; ctx.textAlign = 'right';
+  dates.forEach((d, di) => ctx.fillText(d.slice(5), pad.l - 5, pad.t + di * cellH + cellH / 2 + 3));
+  ctx.textAlign = 'center';
+  hours.forEach((hr, hi) => ctx.fillText(hr, pad.l + hi * cellW + cellW / 2, h - 7));
+
+  // hover：显示格子值
+  cv.onmousemove = e => {
+    const rect = cv.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    const hi = Math.floor((mx - pad.l) / cellW);
+    const di = Math.floor((my - pad.t) / cellH);
+    if (hi < 0 || hi >= hours.length || di < 0 || di >= dates.length) { hideInfo(); return; }
+    const v = cellVals[di + '-' + hi];
+    const row = rows[di * 24 + hi];
+    const lines = [
+      `<div class="tt-title">${esc(dates[di])} ${String(hours[hi]).padStart(2, '0')}:00</div>`,
+      row ? infoRowsFor(res, row) : `<div class="tt-row"><span class="k">量级</span><span class="v">${formatNum(v)}</span></div>`,
+    ].join('');
+    showInfo(cv, e, lines);
+  };
+  cv.onmouseleave = hideInfo;
+}
+
+// ════════════════════════════════════════════════════════════
+// 数据加载 & 渲染
+// ════════════════════════════════════════════════════════════
+async function loadAll() {
+  try {
+    const [r, m, s] = await Promise.all([
+      fetch('/api/results').then(x => x.json()),
+      fetch('/api/model').then(x => x.json()),
+      fetch('/api/status').then(x => x.json()),
+    ]);
+    allResults = r.results || [];
+    modelInfo = m;
+    $('statusBar').innerHTML =
+      `最新披露日: ${esc(s.latest_disclosure || '—')} · ` +
+      `最新实际日: ${esc(s.latest_actual || '—')} · ` +
+      `活动模型: ${esc(m.active)} · τ=${m.threshold}/${m.threshold_big}`;
+    $('subtitle').textContent = `模型 ${m.active} · 训练于 ${m.trained_at || '—'}`;
+    const sel = $('fileSel');
+    sel.innerHTML = '';
+    allResults.forEach((res, i) => {
+      const o = document.createElement('option');
+      o.value = i;
+      o.textContent = res.error ? `${res.file} (读取失败)` : `${res.file}  [${res.flag_label || '—'}]`;
+      sel.appendChild(o);
+    });
+    sel.onchange = () => { if (allResults[+sel.value]) renderResult(allResults[+sel.value]); };
+    if (allResults.length) renderResult(allResults[0]);
+    else $('kpis').innerHTML = '<div class="loading">尚无预测结果，请先运行每日流程</div>';
+  } catch (e) {
+    $('kpis').innerHTML = `<div class="loading">加载失败: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderResult(res) {
+  if (!res || res.error) { $('kpis').innerHTML = `<div class="loading">${esc(res?.error || '无数据')}</div>`; return; }
+  current = res;
+  // 副标题：模型 + 核对标记徽章
+  const tag = ckBadge(res);
+  $('subtitle').innerHTML =
+    `模型 ${esc(res.model || modelInfo?.active || '—')} · ` +
+    `训练于 ${esc(modelInfo?.trained_at || '—')} · ${tag}`;
+  renderKPIs(res);
+  renderCharts(res);
+  renderTable(res);
+  const isV9 = res.is_v9;
+  ['chartDir', 'chartConf', 'chartAct'].forEach(id => {
+    $(id).closest('.panel').style.display = isV9 ? '' : 'none';
+  });
+}
+
+// 核对标记徽章（a 未核对 / b 核对中 / c 已核对）
+function ckBadge(res) {
+  const f = res.flag || 'a';
+  const cls = { a: 'ck-a', b: 'ck-b', c: 'ck-c' }[f] || 'ck-a';
+  const label = res.flag_label || '—';
+  return `<span class="ck-tag ${cls}">${esc(label)}</span>`;
+}
+
+// KPI
+function renderKPIs(res) {
+  const rows = res.rows, n = rows.length;
+  const kpi = (label, value, cls, small) =>
+    `<div class="kpi"><div class="label">${label}</div><div class="value ${cls}">${value}${small ? `<small> ${small}</small>` : ''}</div></div>`;
+  const cards = [kpi('预测窗口', `${res.days} 天`, 'blue', `${n} 小时`)];
+  if (res.is_v9) {
+    const acted = rows.filter(r => r['是否出手'] === '是').length;
+    const ck = {};
+    rows.forEach(r => { const v = r['方向核对'] || '待实际'; ck[v] = (ck[v] || 0) + 1; });
+    const ok = (ck['对·实际正'] || 0) + (ck['对·实际负'] || 0);
+    const bad = (ck['错·实际正'] || 0) + (ck['错·实际负'] || 0);
+    const pending = (ck['待实际'] || 0) + (ck['未出手'] || 0);
+    const avgMag = avg(rows.map(r => toNum(r['量级(元/MWh)'])));
+    const avgConf = avg(rows.map(r => toNum(r['置信度'])));
+    cards.push(kpi('出手小时', acted, acted ? 'yellow' : '', '小时'));
+    if (pending > 0 && ok + bad === 0) cards.push(kpi('方向核对', pending, 'muted', '待实际'));
+    else cards.push(kpi('方向核对', `${ok}/${ok + bad}`, ok + bad ? (ok >= bad ? 'green' : 'red') : '', bad ? `错 ${bad}` : ''));
+    cards.push(kpi('平均量级', avgMag.toFixed(1), 'blue', '元/MWh'));
+    cards.push(kpi('平均置信度', (avgConf * 100).toFixed(1) + '%', avgConf > 0.6 ? 'green' : 'yellow', ''));
+    // 套利时机/结果（有套利列才展示）
+    if ('套利时机' in (rows[0] || {})) {
+      const buy = rows.filter(r => r['套利时机'] === '日前买').length;
+      const sell = rows.filter(r => r['套利时机'] === '日前卖').length;
+      let profit = 0, loss = 0, miss = 0;
+      rows.forEach(r => {
+        const v = String(r['套利结果'] || '待实际');
+        if (v.startsWith('盈利')) profit++;
+        else if (v.startsWith('亏损')) loss++;
+        else if (v.startsWith('错过')) miss++;
+      });
+      const pnl = rows.reduce((s, r) => { const v = toNum(r['套利盈亏(元/MWh)']); return s + (isNaN(v) ? 0 : v); }, 0);
+      cards.push(kpi('套利·日前买', buy, buy ? 'red' : '', '小时'));
+      cards.push(kpi('套利·日前卖', sell, sell ? 'green' : '', '小时'));
+      cards.push(kpi('套利·盈利', profit, profit ? 'green' : '', '时'));
+      cards.push(kpi('套利·亏损', loss, loss ? 'red' : '', '时'));
+      cards.push(kpi('套利·错过', miss, miss ? 'yellow' : '', '时'));
+      cards.push(kpi('套利盈亏', (pnl >= 0 ? '+' : '') + pnl.toFixed(1), pnl > 0 ? 'green' : pnl < 0 ? 'red' : 'muted', '元/MWh'));
+    }
+  } else {
+    const warns = rows.filter(r => String(r['是否预警']).includes('是')).length;
+    const big = rows.filter(r => String(r['预警等级']).startsWith('大')).length;
+    const pos = rows.filter(r => String(r['预警等级']).includes('正') && !String(r['预警等级']).startsWith('大')).length;
+    const neg = rows.filter(r => String(r['预警等级']).includes('负') && !String(r['预警等级']).startsWith('大')).length;
+    cards.push(kpi('预警小时', warns, warns ? 'yellow' : 'green', `${n} 中`));
+    cards.push(kpi('大偏差', big, big ? 'red' : '', '小时'));
+    cards.push(kpi('正偏差', pos, pos ? 'green' : '', '小时'));
+    cards.push(kpi('负偏差', neg, neg ? 'red' : '', '小时'));
+  }
+  $('kpis').innerHTML = cards.join('');
+}
+
+function toNum(v) { const f = parseFloat(v); return isNaN(f) ? NaN : f; }
+function avg(a) { const b = a.filter(v => !isNaN(v)); return b.length ? b.reduce((x, y) => x + y, 0) / b.length : 0; }
+function dirCode(v) { const s = String(v || ''); return s.includes('负') ? -1 : s.includes('正') ? 1 : 0; }
+
+// ════════════════════════════════════════════════════════════
+// 图表渲染（重绘函数挂在 cv._redraw 上，十字线 hover 复用）
+// ════════════════════════════════════════════════════════════
+function renderCharts(res) {
+  const rows = res.rows;
+  const labels = rows.map(r => `${r['日期']} ${String(r['小时']).slice(0, 5)}`);
+  const t1 = modelInfo?.threshold ?? 50, t2 = modelInfo?.threshold_big ?? 100;
+
+  if (res.is_v9) {
+    // ① 量级（出手小时叠加 套利时机标记：日前买=红▼ / 日前卖=绿▼）
+    const mag = rows.map(r => toNum(r['量级(元/MWh)']));
+    const magMax = Math.max(60, ...mag.filter(v => !isNaN(v)));
+    const buyIdx = [], sellIdx = [];
+    rows.forEach((r, i) => {
+      if (r['套利时机'] === '日前买') buyIdx.push(i);
+      else if (r['套利时机'] === '日前卖') sellIdx.push(i);
+    });
+    const main = makeLineChart($('chartMain'), {
+      rows, ymin: 0, ymax: magMax * 1.12,
+      series: [{ data: mag, color: '#2f6fed', width: 2 }],
+      thresholds: [{ v: t1, color: '#d97706', label: 'τ' + t1 }, { v: t2, color: '#dc2626', label: 'τ' + t2 }],
+      markers: [
+        { indices: buyIdx, color: '#dc2626', shape: 'tri' },
+        { indices: sellIdx, color: '#16a34a', shape: 'tri' },
+      ],
+      ylab: '元/MWh',
+    });
+    $('legendMain').innerHTML =
+      `<span><i style="background:#2f6fed"></i>量级(元/MWh)</span>` +
+      `<span><i style="background:#d97706"></i>τ=${t1}</span>` +
+      `<span><i style="background:#dc2626"></i>τ=${t2}</span>` +
+      `<span><i style="background:#dc2626;border-radius:50%"></i>日前买</span>` +
+      `<span><i style="background:#16a34a;border-radius:50%"></i>日前卖</span>`;
+    bindCrosshair($('chartMain'), main, i => infoLines(res, i), rows);
+    main({ idx: -1 });
+
+    // ② 方向 vs 先验
+    const dirArr = rows.map(r => dirCode(r['模型方向']));
+    const priorArr = rows.map(r => dirCode(r['小时先验']));
+    const dir = makeLineChart($('chartDir'), {
+      rows, ymin: -1.4, ymax: 1.4,
+      series: [
+        { data: dirArr, color: '#dc2626', width: 1.6 },
+        { data: priorArr.map(v => v + 0.08), color: '#16a34a', width: 1.2 },
+      ],
+      ylab: '方向',
+    });
+    bindCrosshair($('chartDir'), dir, i => infoLines(res, i), rows);
+    dir({ idx: -1 });
+
+    // ③ 置信度
+    const conf = rows.map(r => toNum(r['置信度']));
+    const confChart = makeLineChart($('chartConf'), {
+      rows, ymin: 0, ymax: 1,
+      series: [{ data: conf, color: '#7c3aed', width: 2 }],
+      thresholds: [{ v: 0.5, color: '#94a3b8', dash: [3, 3], label: '0.5' }],
+      ylab: '置信度',
+    });
+    bindCrosshair($('chartConf'), confChart, i => infoLines(res, i), rows);
+    confChart({ idx: -1 });
+
+    // ④ 实际价差核对（对绿/错红/中性灰/错过黄/待实际淡灰）
+    const act = rows.map(r => toNum(r['实际价差(元/MWh)']));
+    const colors = rows.map(r => {
+      const ck = r['方向核对'] || '';
+      const arb = r['套利结果'] || '';
+      if (ck.startsWith('对')) return '#16a34a';
+      if (ck.startsWith('错')) return '#dc2626';
+      if (arb.startsWith('错过')) return '#d97706';
+      if (ck === '实际中性') return '#94a3b8';
+      return '#e5e7eb';
+    });
+    const actChart = makeScatterChart($('chartAct'), { rows, data: act, colors, xs: rows.map((_, i) => i), t1 });
+    // 散点 hover：绑定最近点
+    const pad = { l: 46, r: 16, t: 14, b: 34 };
+    $('chartAct').addEventListener('mousemove', e => {
+      const rect = $('chartAct').getBoundingClientRect();
+      const mx = e.clientX - rect.left;
+      if (mx < pad.l || mx > rect.width - pad.r) { hideInfo(); actChart({ idx: -1 }); return; }
+      const n = rows.length;
+      const idx = Math.max(0, Math.min(n - 1, Math.round((mx - pad.l) / (Math.max(rect.width - pad.l - pad.r, 1) / Math.max(n - 1, 1)))));
+      hoverState.idx = idx;
+      const lines = infoLines(res, idx);
+      if (lines) showInfo($('chartAct'), e, lines);
+      actChart(hoverState);
+    });
+    $('chartAct').addEventListener('mouseleave', () => { hideInfo(); actChart({ idx: -1 }); });
+    actChart({ idx: -1 });
+  } else {
+    // classic：价差折线
+    const spr = rows.map(r => toNum(r['预测价差(元/MWh)']));
+    const vs = spr.filter(v => !isNaN(v));
+    const ymax = Math.max(50, ...vs.map(v => Math.abs(v))) * 1.15;
+    const main = makeLineChart($('chartMain'), {
+      rows, ymin: -ymax, ymax,
+      series: [{ data: spr, color: '#2f6fed', width: 2 }],
+      thresholds: [
+        { v: t1, color: '#d97706', label: '+' + t1 }, { v: -t1, color: '#d97706' },
+        { v: t2, color: '#dc2626', label: '+' + t2 }, { v: -t2, color: '#dc2626' },
+      ],
+      ylab: '元/MWh',
+    });
+    $('legendMain').innerHTML =
+      `<span><i style="background:#2f6fed"></i>预测价差</span>` +
+      `<span><i style="background:#d97706"></i>±τ=${t1}</span>` +
+      `<span><i style="background:#dc2626"></i>±τ=${t2}</span>`;
+    bindCrosshair($('chartMain'), main, i => infoLines(res, i), rows);
+    main({ idx: -1 });
+  }
+  renderHeatmap(res);
+}
+
+// ════════════════════════════════════════════════════════════
+// 金融式信息卡内容：完整字段展示
+// ════════════════════════════════════════════════════════════
+function infoLines(res, i) {
+  const r = res.rows[i];
+  if (!r) return null;
+  const title = `${esc(r['日期'])} ${esc(String(r['小时']).slice(0, 5))}`;
+  const parts = [`<div class="tt-title">${title}</div>`];
+  if (res.is_v9) {
+    const mag = toNum(r['量级(元/MWh)']);
+    const conf = toNum(r['置信度']);
+    const act = toNum(r['实际价差(元/MWh)']);
+    const ck = r['方向核对'] || '待实际';
+    parts.push(row('模型方向', r['模型方向'] || '—'));
+    parts.push(row('量级', `${formatNum(mag)} 元/MWh`, 'strong'));
+    parts.push(row('置信度', isNaN(conf) ? '—' : (conf * 100).toFixed(1) + '%'));
+    parts.push(row('小时先验', r['小时先验'] || '—'));
+    parts.push(row('是否出手', r['是否出手'] || '—', r['是否出手'] === '是' ? 'strong' : ''));
+    if (!isNaN(act)) {
+      parts.push(row('实际价差', `${act >= 0 ? '+' : ''}${act.toFixed(1)} 元/MWh`, act > 0 ? 'pos' : 'neg'));
+    }
+    parts.push(row('方向核对', ck, ck.startsWith('对') ? 'pos' : ck.startsWith('错') ? 'neg' : ''));
+    if (r['交易建议'] && r['交易建议'] !== '不动') parts.push(row('交易建议', r['交易建议'], 'strong'));
+    // 套利时机/结果/盈亏
+    const arbT = r['套利时机'] || '';
+    if (arbT) {
+      parts.push(row('套利时机', arbT, arbT === '日前买' ? 'neg' : arbT === '日前卖' ? 'pos' : ''));
+    }
+    const arbR = r['套利结果'] || '';
+    if (arbR && arbR !== '待实际' && arbR !== '未出手') {
+      parts.push(row('套利结果', arbR, arbR.startsWith('盈利') ? 'pos' : arbR.startsWith('亏损') ? 'neg' : ''));
+    }
+    const pnl = toNum(r['套利盈亏(元/MWh)']);
+    if (!isNaN(pnl)) {
+      parts.push(row('套利盈亏', (pnl >= 0 ? '+' : '') + pnl.toFixed(1) + ' 元/MWh', pnl > 0 ? 'pos' : pnl < 0 ? 'neg' : ''));
+    }
+  } else {
+    parts.push(row('预警等级', r['预警等级'] || '—'));
+    const spr = toNum(r['预测价差(元/MWh)']);
+    parts.push(row('预测价差', isNaN(spr) ? '正常(不预警)' : `${spr >= 0 ? '+' : ''}${spr.toFixed(1)} 元/MWh`, isNaN(spr) ? '' : (spr > 0 ? 'pos' : 'neg')));
+    parts.push(row('是否预警', r['是否预警'] || '—', String(r['是否预警']).includes('是') ? 'pos' : ''));
+    if (r['class_code'] !== undefined) parts.push(row('class', r['class_code'] || '—'));
+  }
+  return parts.join('');
+}
+function row(k, v, cls) {
+  return `<div class="tt-row"><span class="k">${k}</span><span class="v ${cls || ''}">${esc(v)}</span></div>`;
+}
+
+// 明细表（套利时机日前买红 / 日前卖绿 优先于方向核对；classic 按预警等级）
+function renderTable(res) {
+  const cols = res.columns;
+  const tbody = res.rows.map(r => {
+    const cls = rowClass(r, res.is_v9);
+    return `<tr class="${cls}">` + cols.map(c => `<td title="${esc(r[c] ?? '')}">${esc(r[c] ?? '—')}</td>`).join('') + '</tr>';
+  }).join('');
+  $('tableScroll').innerHTML =
+    `<table><thead><tr>${cols.map(c => `<th>${esc(c)}</th>`).join('')}</tr></thead><tbody>${tbody}</tbody></table>`;
+}
+function rowClass(r, isV9) {
+  if (isV9) {
+    const arb = r['套利时机'] || '';
+    // 出手小时的套利时机分色（日前买=红押负 / 日前卖=绿押正）
+    if (arb === '日前买') return 'row-buy';
+    if (arb === '日前卖') return 'row-sell';
+    const ck = r['方向核对'] || '';
+    if (ck.startsWith('对')) return 'row-green';
+    if (ck.startsWith('错')) return 'row-red';
+    return '';
+  }
+  const lvl = String(r['预警等级'] || '');
+  if (lvl.includes('正常')) return 'row-green';
+  if (lvl.startsWith('大')) return 'row-red';
+  return 'row-yellow';
+}
+
+$('refreshBtn').onclick = loadAll;
+loadAll();
+let rszTimer;
+window.addEventListener('resize', () => {
+  clearTimeout(rszTimer);
+  rszTimer = setTimeout(() => { if (current) renderCharts(current); }, 200);
+});
+</script>
+</body>
+</html>

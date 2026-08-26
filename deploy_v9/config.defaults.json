@@ -1,0 +1,56 @@
+{
+  "project_dir": ".",
+  "data_dir": "../data",
+  "model_dir": "./models",
+  "upload_dir": "./upload",
+  "active_model": "v8",
+  "model_registry": {
+    "v8": {
+      "label": "价差预测 v8（触发阈值 50，自定义惩罚函数，当前主模型）",
+      "pattern": "xgb_v8_{ts}.joblib",
+      "predict_mode": "spread"
+    },
+    "v7": {
+      "label": "价差预测（日前-实时价差，旧阈值 5/15）",
+      "pattern": "xgb_v7_{ts}.joblib",
+      "predict_mode": "spread"
+    },
+    "v5.4r": {
+      "label": "日前统一结算价绝对值预测（备用模型）",
+      "pattern": "xgb_v5.4r_{ts}.joblib",
+      "predict_mode": "price"
+    },
+    "v5.4": {
+      "label": "日前统一结算价绝对值预测（旧模型）",
+      "pattern": "xgb_v5.4_{ts}.joblib",
+      "predict_mode": "price"
+    }
+  },
+  "spread": {
+    "threshold": 50.0,
+    "threshold_big": 50.0
+  },
+  "predict_window": {
+    "back_days": 4,
+    "fwd_days": 1
+  },
+  "factor_rebuild": {
+    "mode": "full",
+    "tail_days": 60,
+    "rebuild_sp_wow": true
+  },
+  "training": {
+    "valid_days": 30,
+    "n_estimators": 200,
+    "early_stopping": 30,
+    "random_state": 42,
+    "fixed_params": {
+      "max_depth": 8,
+      "learning_rate": 0.05,
+      "subsample": 0.8,
+      "colsample_bytree": 1.0,
+      "tree_method": "hist",
+      "n_jobs": 8
+    }
+  }
+}

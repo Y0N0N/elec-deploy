@@ -1,0 +1,198 @@
+{
+  "miss_rate": 0.05269683818970862,
+  "n_big": 3226,
+  "n_missed": 170,
+  "caught": 3056,
+  "missed_mag_dist": [
+    {
+      "lo": 15,
+      "hi": 25,
+      "missed": 54,
+      "total": 457
+    },
+    {
+      "lo": 25,
+      "hi": 50,
+      "missed": 51,
+      "total": 680
+    },
+    {
+      "lo": 50,
+      "hi": 100,
+      "missed": 36,
+      "total": 775
+    },
+    {
+      "lo": 100,
+      "hi": "inf",
+      "missed": 29,
+      "total": 1314
+    }
+  ],
+  "extreme_miss_rate": 0.38235294117647056,
+  "monthly_miss": [
+    {
+      "ym": "2026-02",
+      "missed": 46,
+      "big": 488,
+      "rate": 0.0942622950819672
+    },
+    {
+      "ym": "2026-03",
+      "missed": 42,
+      "big": 507,
+      "rate": 0.08284023668639054
+    },
+    {
+      "ym": "2026-04",
+      "missed": 29,
+      "big": 647,
+      "rate": 0.04482225656877898
+    },
+    {
+      "ym": "2026-05",
+      "missed": 13,
+      "big": 583,
+      "rate": 0.022298456260720412
+    },
+    {
+      "ym": "2026-06",
+      "missed": 22,
+      "big": 578,
+      "rate": 0.03806228373702422
+    },
+    {
+      "ym": "2026-07",
+      "missed": 18,
+      "big": 423,
+      "rate": 0.0425531914893617
+    }
+  ],
+  "feature_cmp": [
+    {
+      "feat": "s_统调负荷_ma7",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 109531.3,
+      "missed_mean": 93496.9,
+      "cohens_d": 0.601,
+      "p_val": 1.220841762032616e-13
+    },
+    {
+      "feat": "s_光伏出力预测_ma7",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 2477.6,
+      "missed_mean": 131.7,
+      "cohens_d": 1.39,
+      "p_val": 4.099900204840171e-180
+    },
+    {
+      "feat": "s_风电出力预测_ma7",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 4040.6,
+      "missed_mean": 3631.3,
+      "cohens_d": 0.173,
+      "p_val": 0.011394087954768034
+    },
+    {
+      "feat": "s_D日_ma7",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 6313.1,
+      "missed_mean": 3655.4,
+      "cohens_d": 1.003,
+      "p_val": 8.814923348471265e-41
+    },
+    {
+      "feat": "s_预测出力_ma7",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 16.5,
+      "missed_mean": -2056.4,
+      "cohens_d": 0.988,
+      "p_val": 6.527078126702354e-28
+    },
+    {
+      "feat": "sp_wow_abs",
+      "caught_n": 3056,
+      "missed_n": 170,
+      "caught_mean": 0.20000000298023224,
+      "missed_mean": 5.400000095367432,
+      "cohens_d": -0.028999999165534973,
+      "p_val": 0.6514821648597717
+    }
+  ],
+  "verdict": {
+    "structural_support": false,
+    "sig_feats": [
+      "s_统调负荷_ma7",
+      "s_光伏出力预测_ma7",
+      "s_D日_ma7",
+      "s_预测出力_ma7"
+    ],
+    "extreme_miss_rate": 0.38235294117647056,
+    "miss_rate": 0.05269683818970862,
+    "n_missed": 170,
+    "n_big": 3226
+  },
+  "top_missed": [
+    {
+      "date": "2026-03-28",
+      "hour": "06:00",
+      "spread_true": -670.760009765625,
+      "clf_cls": 2,
+      "reg_val": -0.09673666
+    },
+    {
+      "date": "2026-04-04",
+      "hour": "06:00",
+      "spread_true": -631.1799926757812,
+      "clf_cls": 2,
+      "reg_val": -58.72733
+    },
+    {
+      "date": "2026-04-11",
+      "hour": "03:00",
+      "spread_true": -469.10003662109375,
+      "clf_cls": 2,
+      "reg_val": -52.27918
+    },
+    {
+      "date": "2026-03-30",
+      "hour": "07:00",
+      "spread_true": -445.8200378417969,
+      "clf_cls": 2,
+      "reg_val": 1.1386974
+    },
+    {
+      "date": "2026-03-28",
+      "hour": "07:00",
+      "spread_true": -393.6599731445313,
+      "clf_cls": 2,
+      "reg_val": -5.4236817
+    },
+    {
+      "date": "2026-03-29",
+      "hour": "07:00",
+      "spread_true": -381.1900024414063,
+      "clf_cls": 2,
+      "reg_val": -52.87283
+    },
+    {
+      "date": "2026-04-04",
+      "hour": "04:00",
+      "spread_true": -343.6600341796875,
+      "clf_cls": 1,
+      "reg_val": -21.75943
+    },
+    {
+      "date": "2026-04-04",
+      "hour": "03:00",
+      "spread_true": -253.79998779296875,
+      "clf_cls": 1,
+      "reg_val": -48.467094
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+# Local data and business files
+data/
+**/data/
+deploy_v9/upload/
+deploy_v9/output/
+deploy_v9/models/
+deploy_v9/archive/
+*.feather
+*.fea
+*.xlsx
+*.csv
+
+# Trained artifacts and generated reports
+*.joblib
+*.pkl
+*.pickle
+*.log
+*.aux
+*.out
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.bak
+*.zip
+
+# Public branding assets
+!deploy_v9/assets/
+!deploy_v9/assets/*
+
+# Local state and configuration
+deploy_v9/config.local.json
+deploy_v9/latest_model.json
+deploy_v9/manifest.json
+.env
+.venv/
+venv/
+env/
+
+# Python / notebook / OS files
+__pycache__/
+*.py[cod]
+*.so
+.ipynb_checkpoints/
+*.egg-info/
+.DS_Store
+.vscode/
+.idea/
+
+# Local agent/editor state
+.agent/
+.claude/
+.tasks/
+.questions/
+
+# Curated result snapshots are publishable; raw data formats remain ignored.
+!deploy_v9/data/
+!deploy_v9/data/*.json
+!deploy_v9/output/
+!deploy_v9/output/*.csv
+!Yonon/data/
+!Yonon/data/*.json
+!Yonon/data/*.csv
+deploy_v9/data/*.feather
+Yonon/data/*.feather

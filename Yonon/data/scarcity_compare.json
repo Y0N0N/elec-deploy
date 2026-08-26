@@ -1,0 +1,40 @@
+{
+  "weight": {
+    "scale": 3.0,
+    "morning": 1.5
+  },
+  "baseline": {
+    "n_big": 3226,
+    "n_miss": 170,
+    "miss_rate": 0.05269683818970862,
+    "n_miss_morning": 89,
+    "n_morning": 634,
+    "morning_miss_rate": 0.14037854889589904,
+    "n_miss_boundary": 54,
+    "n_boundary": 457,
+    "boundary_miss_rate": 0.11816192560175055,
+    "big_f1": 0.8659676962312269,
+    "big_recall": 0.9473031618102914,
+    "big_precision": 0.7974947807933194,
+    "sign_hit": 0.5768235902741852
+  },
+  "scarcity": {
+    "n_big": 3226,
+    "n_miss": 106,
+    "miss_rate": 0.0328580285182889,
+    "n_miss_morning": 58,
+    "n_morning": 634,
+    "morning_miss_rate": 0.0914826498422713,
+    "n_miss_boundary": 39,
+    "n_boundary": 457,
+    "boundary_miss_rate": 0.08533916849015317,
+    "big_f1": 0.8700501952035694,
+    "big_recall": 0.9671419714817111,
+    "big_precision": 0.7906741003547897,
+    "sign_hit": 0.5874288670460425
+  },
+  "window": [
+    "2026-02-01",
+    "2026-07-26"
+  ]
+}
