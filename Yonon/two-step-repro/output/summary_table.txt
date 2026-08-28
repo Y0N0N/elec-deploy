@@ -29,9 +29,9 @@ Coverage of 95% CIs (truth = oracle):
 Interpretation:
   - i.i.d. analytic CIs badly under-cover (0.45-0.57 instead of 0.95): within-day
     dependence inflates the effective sample; this is exactly the time-series vs
-    i.i.d. point Wong raised on Aug 8.
+    i.i.d. point in the two-step framework.
   - day-clustered bootstrap (resample whole days) restores ~nominal coverage: this
-    is 'day clustering to handle the dependence within a day' in the email.
+    is 'day clustering to handle the dependence within a day'.
   - two-step (full-sample imputation) beats Phase-II-only on the coarse
     coefficients (Z_yest, Z_roll, intercept): 'the coarse supply-side model covers
     all days, a detailed second stage refines it'.
