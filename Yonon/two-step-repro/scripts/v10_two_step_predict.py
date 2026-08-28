@@ -5,7 +5,7 @@ v10 — two-phase (two-step) prediction of the Guangdong DA-RT spread
 ===================================================================
 Builds on v9's production framework (direction head + magnitude head +
 hour prior + walk-forward backtest) and adds the two-phase / two-step
-structure from Prof. Wong's two-phase-studies method that we reproduced
+structure of the two-phase-studies method that we reproduced
 in reproduce_two_step.py.
 
 The fine covariate is the REAL positive reserve (正备用), hourly.  v9's
@@ -27,7 +27,7 @@ Three treatment modes (the experiment):
               (XGBoost handles missing; = v9-style partial-information)
   twostep     regression calibration: E[X | Z] estimated on Phase II,
               X_hat imputed for ALL days, then trained as a feature
-              (= the two-step estimator, faithful to Prof. Wong)
+              (= the two-step estimator of the two-phase method)
 
 Both heads use v9's exact hyper-parameters and thresholds (τ=50 minor,
 τ=100 big), the same hour prior, the same C-strategy rule layer, and the
@@ -140,19 +140,16 @@ def load_feature_series(name):
 
 
 def build_feature_list(subset=None):
-    """Return feature names (in fixed order). subset=N -> first N existing.
-
-    In the standalone repo there is no deploy_v9 model to inherit the v9
-    feature list from, so we build the list from the factor files present
-    under data/factors/ (sorted).  Optionally, if a v9 model is available at
-    ../../deploy_v9/models (development checkout), inherit its feature list.
-    """
+    """Return feature names (in fixed order). subset=N -> first N existing."""
+    # start from the v9 feature list (stored in the repo under deploy_v9);
+    # fall back to all factor files if the list is unavailable.
     feats = None
     lst = os.path.join(HERE, "..", "..", "deploy_v9", "models")
     import glob as _glob
     v9_models = sorted(_glob.glob(os.path.join(lst, "xgb_v9_*.joblib")))
     if v9_models:
         try:
+            # the v9 model payload needs v9_wrappers importable
             sys.path.insert(0, os.path.join(HERE, "..", "..", "deploy_v9", "code", "v9"))
             import v9_wrappers  # noqa: F401
             import joblib
