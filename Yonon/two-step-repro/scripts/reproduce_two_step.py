@@ -3,8 +3,8 @@
 """
 Two-step reproduction — regression calibration + day-clustered inference
 =========================================================================
-Reproduces the claims in the 2026-08-27 email to Prof. Wong on Guangdong
-DA-RT spread data:
+Reproduces the method claims of two-phase / two-step (regression-calibration)
+estimation on Guangdong DA-RT spread data:
 
   * "I use each day as one unit"          -> DAY is the unit of observation
   * "observations approximately i.i.d."   -> days are approx. independent
@@ -48,9 +48,9 @@ Inference
   estimators per replicate -> bootstrap SE + 95% CI per coefficient (handles
   within-day dependence).  Also i.i.d. analytic SE, to show that naive i.i.d.
   CIs UNDER-COVER when within-day autocorrelation is present -- the time-series
-  vs i.i.d. point Wong raised on Aug 8.  Coverage is judged against the oracle
-  estimator (true X on all days), per key coefficient: intercept, Z_yest, Z_roll
-  (coarse covariates), and X (the fine covariate).
+  vs i.i.d. point in the two-step framework.  Coverage is judged against the
+  oracle estimator (true X on all days), per key coefficient: intercept,
+  Z_yest, Z_roll (coarse covariates), and X (the fine covariate).
 
 Outputs
 -------
@@ -284,7 +284,7 @@ def main():
     n_days = len(np.unique(dates))
     print(f"  samples (date,hour): {len(df)}   days: {n_days}", flush=True)
 
-    # descriptive facts (what the email says)
+    # descriptive facts (the two-step method claims)
     lag1 = SP.apply(lambda c: c.autocorr(1), axis=0).mean()
     print(f"  within-day lag-1 autocorr of spread (mean over days): {lag1:.3f}", flush=True)
     print(f"  corr(X=reserve, Y=spread) = {np.corrcoef(df['X'], df['Y'])[0,1]:.3f}   "
@@ -400,9 +400,9 @@ def main():
         "Interpretation:",
         "  - i.i.d. analytic CIs badly under-cover (0.42-0.65 instead of 0.95): within-day",
         "    dependence inflates the effective sample; this is exactly the time-series vs",
-        "    i.i.d. point Wong raised on Aug 8.",
+        "    i.i.d. point in the two-step framework.",
         "  - day-clustered bootstrap (resample whole days) restores ~nominal coverage: this",
-        "    is 'day clustering to handle the dependence within a day' in the email.",
+        "    is 'day clustering to handle the dependence within a day'.",
         "  - two-step (full-sample imputation) beats Phase-II-only on the coarse",
         "    coefficients (Z_yest, Z_roll, intercept): 'the coarse supply-side model covers",
         "    all days, a detailed second stage refines it'.",
