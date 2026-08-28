@@ -1,0 +1,113 @@
+{
+  "n": 13848,
+  "n_days": 577,
+  "frac_phase2": 0.3,
+  "within_day_lag1_autocorr": 0.2574315209220235,
+  "corr_X_Y": 0.04869953771343392,
+  "corr_Z_yest_X": 0.8872537661835943,
+  "corr_Z_roll_X": 0.09442550548016791,
+  "calibration_r2": 0.7875575832488542,
+  "outcome_r2_no_x": 0.06510178219108509,
+  "outcome_r2_with_x": 0.06520420670601501,
+  "beta_oracle": {
+    "intercept": -42.1986121429069,
+    "Z_yest": 0.00021748686496400173,
+    "Z_roll": 0.423241843992535,
+    "X": 0.0016294137829361407
+  },
+  "beta_phase2_only": {
+    "intercept": -34.390621958718256,
+    "Z_yest": 0.006918932486137783,
+    "Z_roll": 0.33705870997465265,
+    "X": -0.005735654698638747
+  },
+  "beta_two_step": {
+    "intercept": -7.222186420242004,
+    "Z_yest": 0.020820940990643553,
+    "Z_roll": 0.4165596242371125,
+    "X": -0.022224051521165918
+  },
+  "efficiency_gain": {
+    "intercept": {
+      "se_phase2_only": 55.5898116869841,
+      "se_two_step": 4.872409135251202,
+      "ratio": 0.08764931895590566
+    },
+    "Z_yest": {
+      "se_phase2_only": 0.005470684373538224,
+      "se_two_step": 0.002774341400884305,
+      "ratio": 0.5071287633232567
+    },
+    "Z_roll": {
+      "se_phase2_only": 0.08827214738451658,
+      "se_two_step": 0.0525454946319445,
+      "ratio": 0.5952669804559583
+    },
+    "X": {
+      "se_phase2_only": 0.0045360876388378735,
+      "se_two_step": 0.002877195232469567,
+      "ratio": 0.6342900449795305
+    }
+  },
+  "coverage_iid_analytic": {
+    "intercept": 0.65,
+    "Z_yest": 0.56,
+    "Z_roll": 0.42,
+    "X": 0.57
+  },
+  "coverage_dayclustered": {
+    "intercept": {
+      "oracle": -42.1986121429069,
+      "cover_phase2_only": true,
+      "ci_phase2_only": [
+        -128.7816819015712,
+        84.84573017458825
+      ],
+      "cover_two_step": false,
+      "ci_two_step": [
+        -16.931668472579517,
+        2.050863127049377
+      ]
+    },
+    "Z_yest": {
+      "oracle": 0.00021748686496400173,
+      "cover_phase2_only": true,
+      "ci_phase2_only": [
+        -0.01647411807361133,
+        0.005452126193081429
+      ],
+      "cover_two_step": true,
+      "ci_two_step": [
+        -0.0005321995007467261,
+        0.009502664373663563
+      ]
+    },
+    "Z_roll": {
+      "oracle": 0.423241843992535,
+      "cover_phase2_only": false,
+      "ci_phase2_only": [
+        0.4459877241645413,
+        0.801732746932362
+      ],
+      "cover_two_step": true,
+      "ci_two_step": [
+        0.3193762765114388,
+        0.5259772879012902
+      ]
+    },
+    "X": {
+      "oracle": 0.0016294137829361407,
+      "cover_phase2_only": true,
+      "ci_phase2_only": [
+        -0.0025452270877916725,
+        0.015788355348353687
+      ],
+      "cover_two_step": false,
+      "ci_two_step": [
+        -0.011705467743637166,
+        -0.001157431992317764
+      ]
+    }
+  },
+  "method": "Phase II = ~30% random DAYS; X = today's positive reserve (MW, fine, settlement-only); Z = hour dummies + yesterday same-hour reserve + past-7d rolling spread (coarse, day-ahead); two-step = regression calibration E[X|Z] on Phase II, impute all days, OLS on all days; SE = day-clustered bootstrap (resample whole days). Empirical reproduction."
+}
