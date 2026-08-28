@@ -1,0 +1,80 @@
+{
+  "model": "v10_two_phase",
+  "threshold": 50.0,
+  "threshold_big": 100.0,
+  "fine_covariate": "h_价差_前1小时_v10",
+  "valid_days": 60,
+  "frac_phase2": 0.3,
+  "seed": 42,
+  "n_features": 405,
+  "feature_subset": "all",
+  "n_train_rows": 12480,
+  "n_valid_rows": 1440,
+  "hour_prior": {
+    "00": -1,
+    "01": -1,
+    "02": 0,
+    "03": 1,
+    "04": 1,
+    "05": 1,
+    "06": 0,
+    "07": 0,
+    "08": 0,
+    "09": 1,
+    "10": 1,
+    "11": 1,
+    "12": 1,
+    "13": 0,
+    "14": 1,
+    "15": 1,
+    "16": 1,
+    "17": 0,
+    "18": 0,
+    "19": 0,
+    "20": 0,
+    "21": -1,
+    "22": 0,
+    "23": 0
+  },
+  "valid_window": [
+    "2026-06-05",
+    "2026-08-03"
+  ],
+  "results": {
+    "all": {
+      "n_hours": 1440,
+      "n_trigger": 213,
+      "trigger_rate": 0.14791666666666667,
+      "dir_hit": 0.6369047619047619,
+      "net_win_rate": 0.6369047619047619,
+      "n_correct": 107,
+      "n_wrong": 61,
+      "pnl_total": 8779.699981689453,
+      "max_drawdown": 2218.6800231933594
+    },
+    "phase2_only": {
+      "n_hours": 1440,
+      "n_trigger": 112,
+      "trigger_rate": 0.07777777777777778,
+      "dir_hit": 0.589041095890411,
+      "net_win_rate": 0.589041095890411,
+      "n_correct": 43,
+      "n_wrong": 30,
+      "pnl_total": 2319.330047607422,
+      "max_drawdown": 962.7000122070312
+    },
+    "twostep": {
+      "n_hours": 1440,
+      "n_trigger": 780,
+      "trigger_rate": 0.5416666666666666,
+      "dir_hit": 0.5969696969696969,
+      "net_win_rate": 0.5969696969696969,
+      "n_correct": 197,
+      "n_wrong": 133,
+      "pnl_total": 10853.829956054688,
+      "max_drawdown": 2855.2100219726562
+    }
+  },
+  "trained_at": "2026-08-28T10:27:05",
+  "method": "v9 dual-head (dir XGB + mag XGB + hour prior + C rule) with two-phase fine covariate (positive reserve): all=visible everywhere, phase2_only=NaN outside Phase-II, twostep=regression-calibrated E[X|Z] imputed to all days."
+}
