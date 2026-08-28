@@ -2,8 +2,7 @@
 
 The scripts in this repo are self-contained **given** the raw data, but the
 data files themselves are **not published** (they are provincial grid
-disclosure data the author has access to through an internship, and are not
-public).
+disclosure data the author has access to, and are not public).
 
 ## Required input files
 
