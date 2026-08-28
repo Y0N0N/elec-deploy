@@ -98,11 +98,3 @@ identified.
   fully pinned by the imputed data.
 - All inference is empirical (bootstrap), not theory — matching the method's
   "empirical observations, not theory" stance.
-
-## What this does NOT reproduce
-
-Two concrete production results — **train/eval gap 12x → 1x** and the
-**capture of a sharp market plunge** — come from the author's production
-XGBoost pipeline (an internal project log, v5.3 / v5.4-R), not from this
-estimator. This script reproduces the *method framing* (day = unit,
-two-phase structure, day-clustered inference) on the same data.
