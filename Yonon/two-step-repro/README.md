@@ -1,7 +1,12 @@
 # Two-step reproduction (two-phase estimator on Guangdong DA-RT spread)
 
-Reproduces, with a fresh, honest setup, the method claims in the
-**2026-08-27 email to Prof. Wong**:
+Reproduces, with a fresh, honest setup, the method claims of two-phase
+/two-step (regression-calibration) estimation:
+
+> "I use each day as one unit. This makes the observations approximately
+> i.i.d., and I use day clustering to handle the dependence within a day."
+> "The problem turns out to have a natural two-phase structure. A coarse
+> supply-side model covers all days, and a detailed second stage refines it."
 
 Run:
 
@@ -14,7 +19,7 @@ Outputs `output/exp1_results.json` (all numbers) and
 
 ## Data
 
-Copied (read-only subset) from the SAN internship dataset:
+Copied (read-only subset) from a provincial grid disclosure dataset:
 
 | file | what | unit |
 |---|---|---|
@@ -77,7 +82,7 @@ for which the coarse covariates carry signal.
 
 The i.i.d. analytic CI **under-covers** (0.42–0.65 vs 0.95) because
 within-day dependence (`lag-1 autocorr ≈ 0.26`) inflates the effective
-sample size — exactly the time-series vs i.i.d. point Wong raised on Aug 8.
+sample size — the time-series vs i.i.d. point in the two-step framework.
 Day-clustered inference restores ~nominal coverage where the coefficient is
 identified.
 
@@ -87,9 +92,17 @@ identified.
   effect on the spread. The efficiency gain is on the *coarse* covariates
   (two-step sees all days), and `beta_x` itself is not reliably identified.
   **The estimator is only as good as the information in X** — the same caveat
-  as in `research_memo_for_wong.md`.
+  as in the two-step research memo.
 - A single realized Phase-II mask under-covers `intercept` and `Z_roll` for
   the two-step: with a ~30% subset the coarse load level (baseline) is not
   fully pinned by the imputed data.
-- All inference is empirical (bootstrap), not theory — matching the email's
-  "empirical observations, not theory".
+- All inference is empirical (bootstrap), not theory — matching the method's
+  "empirical observations, not theory" stance.
+
+## What this does NOT reproduce
+
+Two concrete production results — **train/eval gap 12x → 1x** and the
+**capture of a sharp market plunge** — come from the author's production
+XGBoost pipeline (an internal project log, v5.3 / v5.4-R), not from this
+estimator. This script reproduces the *method framing* (day = unit,
+two-phase structure, day-clustered inference) on the same data.
