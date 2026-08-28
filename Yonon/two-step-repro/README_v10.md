@@ -65,7 +65,7 @@ All three modes identical (P&L +3576, trig 93) — the reserve carries no
 incremental information for the spread. Kept as an honest control showing
 the method only helps when the fine covariate itself has signal.
 
-## Why this connects to Prof. Wong's two-phase method
+## Why this connects to the two-phase method
 
 - Day is the unit; Phase II = random subset of days; fine covariate only on
   Phase II → exactly the two-phase data structure.
@@ -73,7 +73,7 @@ the method only helps when the fine covariate itself has signal.
   `reproduce_two_step.py`), which is more efficient than using only the
   Phase-II subset.
 - On time-series: we cluster by day (whole days resampled), the same
-  day-clustering argument from the 2026-08-27 email.
+  day-clustering argument as the two-phase method.
 
 ## Files
 
@@ -81,7 +81,7 @@ the method only helps when the fine covariate itself has signal.
 - `output/v10_results_lag_fine.json` — results, fine = intraday lag-1 spread
 - `output/v10_results_reserve_fine.json` — results, fine = reserve (control)
 - `data/factors/h_价差_前1小时_v10.fea`, `data/factors/h_正备用_zscore_v10.fea`
-  — the two fine-covariate factors (generated automatically by the script)
+  — the two fine-covariate factors
 
 ## Run
 
