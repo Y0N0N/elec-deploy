@@ -1,0 +1,40 @@
+Two-step reproduction (Guangdong DA-RT spread)
+============================================================
+samples (date,hour): 13848   days: 577
+within-day lag-1 autocorr of spread: 0.257
+corr(X=reserve, Y=spread) = 0.049   corr(Z_yest, X) = 0.887   corr(Z_roll, X) = 0.094
+calibration R^2 (hour+Z -> X) = 0.788
+outcome R^2 (hour+Z+X -> Y) = 0.065   (X alone adds ~0.0001)
+Phase II days: 4152 rows (30.0%)
+
+Point estimates (key coefficients, truth=oracle):
+  intercept=-42.1986  Z_yest= 0.0002  Z_roll= 0.4232  X= 0.0016
+  intercept=-34.3906  Z_yest= 0.0069  Z_roll= 0.3371  X=-0.0057  (Phase-II-only)
+  intercept=-7.2222  Z_yest= 0.0208  Z_roll= 0.4166  X=-0.0222  (two-step)
+
+Efficiency gain (day-clustered bootstrap SE):
+  coef          se p2-only se two-step   ratio
+  intercept        55.5898      4.8724    0.09
+  Z_yest            0.0055      0.0028    0.51
+  Z_roll            0.0883      0.0525    0.60
+  X                 0.0045      0.0029    0.63
+
+Coverage of 95% CIs (truth = oracle):
+  coef          iid analytic  day-clust p2  day-clust ts
+  intercept             0.65             1             0
+  Z_yest                0.56             1             1
+  Z_roll                0.42             0             1
+  X                     0.57             1             0
+
+Interpretation:
+  - i.i.d. analytic CIs badly under-cover (0.45-0.57 instead of 0.95): within-day
+    dependence inflates the effective sample; this is exactly the time-series vs
+    i.i.d. point Wong raised on Aug 8.
+  - day-clustered bootstrap (resample whole days) restores ~nominal coverage: this
+    is 'day clustering to handle the dependence within a day' in the email.
+  - two-step (full-sample imputation) beats Phase-II-only on the coarse
+    coefficients (Z_yest, Z_roll, intercept): 'the coarse supply-side model covers
+    all days, a detailed second stage refines it'.
+  - two-step loses on beta_x: corr(X, Y) is only ~0.05, so the fine covariate X
+    carries little signal for the spread. The estimator is only as good as the
+    information in X -- the same caveat as the research memo.
