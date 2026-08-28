@@ -51,9 +51,9 @@ dependence inflates the effective sample. Day-clustered bootstrap restores
 ~nominal coverage where the coefficient is identified (the two-step covers
 Z_yest and Z_roll).
 
-## Reading against the 2026-08-27 email
+## Reading against the two-phase method claims
 
-| email claim | reproduced here? | evidence |
+| method claim | reproduced here? | evidence |
 |---|---|---|
 | "each day as one unit, approximately i.i.d." | ✓ | 577 day-clusters; day resampling is the inference unit |
 | "day clustering to handle dependence within a day" | ✓ | iid coverage 0.42–0.65 → day-clustered ~nominal |
@@ -68,4 +68,4 @@ Z_yest and Z_roll).
    estimator is only as good as the information in X.**
 2. Single-mask day-clustered inference under-covers `intercept`/`Z_roll` for
    the two-step at 30% Phase II.
-3. Empirical bootstrap, not theory — same caveat as the research memo.
+3. Empirical bootstrap, not theory.
