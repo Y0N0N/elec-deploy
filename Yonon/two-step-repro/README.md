@@ -3,11 +3,6 @@
 Reproduces, with a fresh, honest setup, the method claims in the
 **2026-08-27 email to Prof. Wong**:
 
-> "I use each day as one unit. This makes the observations approximately
-> i.i.d., and I use day clustering to handle the dependence within a day."
-> "The problem turns out to have a natural two-phase structure. A coarse
-> supply-side model covers all days, and a detailed second stage refines it."
-
 Run:
 
 ```bash
@@ -98,11 +93,3 @@ identified.
   fully pinned by the imputed data.
 - All inference is empirical (bootstrap), not theory — matching the email's
   "empirical observations, not theory".
-
-## What this does NOT reproduce
-
-The 8/27 email's two concrete results — **train/eval gap 12x → 1x** and the
-**capture of a sharp market plunge** — come from the author's production
-XGBoost pipeline (an internal project log, v5.3 / v5.4-R), not from this
-estimator. This script reproduces the *method framing* (day = unit,
-two-phase structure, day-clustered inference) on the same data.
